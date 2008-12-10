@@ -1,13 +1,39 @@
 CallRake
 ========
 
-Introduction goes here.
+This plugin provides simple asynchronus execution of tasks via rake. From your action or model you can call
+a rake task in the background with call_rake(task, options = {})
 
+I borrowed the code from Ryan Bates. You can find his very good screencast on this issue here:
+http://railscasts.com/episodes/127-rake-in-background
+
+Caution:
+Because every call to call_rake loads a complete rails environment this background-processing is not useful
+for frequently called tasks, because the memory usage is relavtively high. Use Starling/Workling or BackgroundRB
+instead.
 
 Example
 =======
 
-Example goes here.
+# mailings_controller.rb
+def deliver
+  call_rake :send_mailing, :mailing_id => params[:id].to_i
+  flash[:notice] = "Delivering mailing"
+  redirect_to mailings_url
+end
+
+# lib/tasks/mailer.rake
+desc "Send mailing"
+task :send_mailing => :environment do
+  mailing = Mailing.find(ENV["MAILING_ID"]) # use uppercase param-names
+  mailing.deliver
+end
+
+# models/mailing.rb
+def deliver
+  sleep 10 # placeholder for sending email
+  update_attribute(:delivered_at, Time.now)
+end
 
 
-Copyright (c) 2008 [name of plugin creator], released under the MIT license
+Copyright (c) 2008 Lars Kuhnt, released under the MIT license
